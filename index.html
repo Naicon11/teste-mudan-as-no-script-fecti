@@ -244,8 +244,7 @@
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbygNjlBC3qBFCKVU6TRAZBykpPcVguIX8D6H5Tnsi6aBeEJ6EdNjPgNT6omXgqrlqEt/exec';
 
 /* ID anônimo por sessão de jogo */
-const SESSAO = 'S' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-
+let SESSAO = '';
 /* Perfil demográfico (preenchido na tela antes do jogo) */
 let PERFIL = { idade:'', genero:'', raca:'' };
 
@@ -280,7 +279,7 @@ function submitDemografia(){
     alert('Informe uma idade entre 8 e 100.');
     return;
   }
-
+  SESSAO = 'S' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
   PERFIL = { idade, genero, raca };
   startGame();
 }
