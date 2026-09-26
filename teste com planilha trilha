@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilha da Humanização</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:linear-gradient(135deg,#ffe7f4,#e5ddff,#d9f8ff);
+    color:#292044;
+  }
+  button{font:inherit}
+  .app{max-width:1100px;margin:auto;padding:18px}
+  header{
+    background:rgba(255,255,255,.9);border-radius:28px;padding:20px;
+    box-shadow:0 10px 30px rgba(50,30,90,.12);text-align:center
+  }
+  h1{margin:0;font-size:clamp(2rem,7vw,4rem);color:#673ab7}
+  .subtitle{margin:5px 0 0;font-weight:700;color:#8d4ab8}
+  .intro{margin:15px auto 0;max-width:720px;line-height:1.5}
+  .screen{display:none}
+  .screen.active{display:block}
+  .start-card{
+    margin-top:18px;background:white;border-radius:28px;padding:28px;
+    box-shadow:0 10px 30px rgba(50,30,90,.12);text-align:center
+  }
+  .people{display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin:20px 0}
+  .person{padding:15px 22px;border-radius:20px;font-weight:800}
+  .nise{background:#eadcff}.ivone{background:#ffd8eb}
+  .primary{
+    border:0;border-radius:18px;padding:14px 25px;background:#673ab7;color:white;
+    font-weight:800;cursor:pointer;box-shadow:0 6px 14px rgba(103,58,183,.25)
+  }
+  .primary:hover{transform:translateY(-1px)}
+  .topbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+  .stat{background:white;border-radius:16px;padding:10px 15px;font-weight:800;box-shadow:0 5px 15px rgba(0,0,0,.08)}
+  .game-layout{display:grid;grid-template-columns:1fr 300px;gap:18px}
+  .board-wrap,.side{
+    background:rgba(255,255,255,.94);border-radius:26px;padding:18px;
+    box-shadow:0 10px 30px rgba(50,30,90,.12)
+  }
+  .board{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:7px;
+    min-height:440px
+  }
+  .cell{
+    min-height:62px;border-radius:15px;padding:6px;position:relative;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:.78rem;font-weight:800;border:2px solid rgba(255,255,255,.9);
+    box-shadow:inset 0 -3px rgba(0,0,0,.05)
+  }
+  .cell:nth-child(4n+1){background:#ffd36e}.cell:nth-child(4n+2){background:#aee8df}
+  .cell:nth-child(4n+3){background:#ffc4df}.cell:nth-child(4n){background:#cfc1ff}
+  .cell.start,.cell.finish{background:#673ab7;color:white;font-size:.95rem}
+  .pawn{
+    position:absolute;right:5px;bottom:3px;font-size:1.45rem;
+    filter:drop-shadow(0 2px 1px rgba(0,0,0,.2))
+  }
+  .cell.highlight{outline:4px solid #ff9f1c;transform:scale(1.03)}
+  .side h2{margin-top:0;color:#673ab7}
+  .dice{
+    font-size:4rem;text-align:center;padding:12px;background:#f5efff;
+    border-radius:22px;margin-bottom:12px
+  }
+  .roll{width:100%;font-size:1.1rem}
+  .message{background:#fff3c7;border-radius:18px;padding:14px;margin-top:14px;line-height:1.45}
+  .legend{display:grid;gap:8px;margin-top:15px}
+  .legend div{padding:9px;border-radius:12px;font-weight:700}
+  .lg-nise{background:#eadcff}.lg-ivone{background:#ffd8eb}
+  .lg-art{background:#fff0b8}.lg-challenge{background:#c9f5ee}
+  .modal{
+    position:fixed;inset:0;background:rgba(31,20,55,.65);display:none;
+    align-items:center;justify-content:center;padding:18px;z-index:10
+  }
+  .modal.show{display:flex}
+  .modal-card{
+    max-width:620px;width:100%;background:white;border-radius:28px;padding:25px;
+    box-shadow:0 20px 60px rgba(0,0,0,.25)
+  }
+  .category{display:inline-block;padding:7px 12px;border-radius:999px;font-weight:900}
+  .question{font-size:1.3rem;font-weight:800;line-height:1.35;margin:18px 0}
+  .answers{display:grid;gap:10px}
+  .answer{
+    border:2px solid #ddd0f5;background:#faf8ff;border-radius:15px;padding:13px;
+    cursor:pointer;text-align:left;font-weight:700
+  }
+  .answer:hover{border-color:#673ab7}
+  .answer.correct{background:#d8f7df;border-color:#37a858}
+  .answer.wrong{background:#ffe0e0;border-color:#d9534f}
+  .result{margin-top:15px;padding:13px;border-radius:15px;background:#f2ecff;line-height:1.45}
+  .next{margin-top:15px;width:100%}
+  .challenge-box{text-align:center}
+  .challenge-text{font-size:1.2rem;font-weight:800;background:#e6faf6;padding:18px;border-radius:18px;line-height:1.45}
+  .hidden{display:none}
+  .end{text-align:center;padding:30px;background:white;border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+  .trophy{font-size:4rem}
+
+  /* Campos de demografia */
+  .form-group{text-align:left;margin:14px 0}
+  .form-group label{display:block;font-weight:800;color:#673ab7;margin-bottom:6px}
+  .form-group input,.form-group select{
+    width:100%;padding:12px 14px;border-radius:14px;border:2px solid #ddd0f5;
+    background:#faf8ff;font:inherit;color:#292044
+  }
+  .form-group input:focus,.form-group select:focus{outline:none;border-color:#673ab7}
+  .privacy-note{font-size:.9rem;color:#6a5a86;margin-top:14px}
+
+  @media(max-width:800px){
+    .game-layout{grid-template-columns:1fr}
+    .board{grid-template-columns:repeat(4,1fr);min-height:0}
+    .cell{min-height:70px}
+  }
+  @media(max-width:480px){
+    .app{padding:10px}
+    .board{grid-template-columns:repeat(3,1fr);gap:5px}
+    .cell{min-height:72px;font-size:.7rem}
+    .side{padding:14px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>🎨 Trilha da Humanização</h1>
+  <div class="subtitle">Arte • Música • Saúde Mental</div>
+  <p class="intro">Uma aventura educativa inspirada na trajetória de <strong>Nise da Silveira</strong> e <strong>Dona Ivone Lara</strong>, mostrando como a arte e a música podem contribuir para a expressão, a cultura e a humanização.</p>
+</header>
+
+<!-- TELA 1: início -->
+<section id="start" class="screen active">
+  <div class="start-card">
+    <div class="people">
+      <div class="person nise">🧠 Nise da Silveira</div>
+      <div class="person ivone">🎵 Dona Ivone Lara</div>
+    </div>
+    <h2>Como jogar?</h2>
+    <p>Jogue o dado, avance pelo caminho e responda às perguntas. Algumas casas trazem desafios criativos. O objetivo é chegar ao final acumulando conhecimento e pontos!</p>
+    <button class="primary" onclick="show('demografia')">▶️ Começar o jogo</button>
+  </div>
+</section>
+
+<!-- TELA 2: dados demográficos (anônimos) -->
+<section id="demografia" class="screen">
+  <div class="start-card">
+    <h2>Antes de começar…</h2>
+    <p>Estas informações são <strong>anônimas</strong> e servem apenas para a análise estatística da pesquisa.</p>
+
+    <div class="form-group">
+      <label for="demoIdade">Idade</label>
+      <input type="number" id="demoIdade" min="8" max="100" placeholder="Ex.: 14">
+    </div>
+
+    <div class="form-group">
+      <label for="demoGenero">Gênero</label>
+      <select id="demoGenero">
+        <option value="">Selecione…</option>
+        <option>Feminino</option>
+        <option>Masculino</option>
+        <option>Não-binário</option>
+        <option>Outro</option>
+        <option>Prefiro não dizer</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="demoRaca">Raça/Etnia (categorias do IBGE)</label>
+      <select id="demoRaca">
+        <option value="">Selecione…</option>
+        <option>Branca</option>
+        <option>Preta</option>
+        <option>Parda</option>
+        <option>Amarela</option>
+        <option>Indígena</option>
+        <option>Prefiro não dizer</option>
+      </select>
+    </div>
+
+    <button class="primary" onclick="submitDemografia()">▶️ Iniciar o jogo</button>
+    <p class="privacy-note">🔒 Nenhum nome, e-mail ou dado pessoal é coletado.</p>
+  </div>
+</section>
+
+<!-- TELA 3: jogo -->
+<section id="game" class="screen">
+  <div class="topbar">
+    <div class="stat">⭐ Pontos: <span id="score">0</span></div>
+    <div class="stat">📍 Casa: <span id="position">1</span>/30</div>
+    <div class="stat">🏆 Recorde: <span id="best">0</span></div>
+  </div>
+
+  <div class="game-layout">
+    <div class="board-wrap">
+      <div id="board" class="board"></div>
+    </div>
+    <aside class="side">
+      <h2>🎲 Sua vez!</h2>
+      <div id="dice" class="dice">⚀</div>
+      <button id="rollBtn" class="primary roll" onclick="rollDice()">🎲 Jogar o dado</button>
+      <div id="message" class="message">Clique no dado para começar.</div>
+      <div class="legend">
+        <div class="lg-nise">🧠 Nise — história e ideias</div>
+        <div class="lg-ivone">🎵 Ivone — música e trajetória</div>
+        <div class="lg-art">🎨 Arte — expressão e criatividade</div>
+        <div class="lg-challenge">💜 Desafio — atividade rápida</div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- TELA 4: fim -->
+<section id="end" class="screen">
+  <div class="end">
+    <div class="trophy">🏆</div>
+    <h2>Você chegou ao final!</h2>
+    <p id="finalText"></p>
+    <button class="primary" onclick="restartGame()">🔄 Jogar novamente</button>
+  </div>
+</section>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+  <div class="modal-card">
+    <span id="category" class="category"></span>
+    <div id="question" class="question"></div>
+    <div id="answers" class="answers"></div>
+    <div id="challenge" class="challenge-box hidden">
+      <div id="challengeText" class="challenge-text"></div>
+    </div>
+    <div id="result" class="result hidden"></div>
+    <button id="nextBtn" class="primary next hidden" onclick="closeModalAndContinue()">Continuar</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO DE COLETA
+   Troque o valor abaixo pela URL do seu App da Web
+   (Implantar → App da Web → URL que termina em /exec)
+   ========================================================= */
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycbygNjlBC3qBFCKVU6TRAZBykpPcVguIX8D6H5Tnsi6aBeEJ6EdNjPgNT6omXgqrlqEt/exec';
+
+/* ID anônimo por sessão de jogo */
+const SESSAO = 'S' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+/* Perfil demográfico (preenchido na tela antes do jogo) */
+let PERFIL = { idade:'', genero:'', raca:'' };
+
+/* Envia um evento para a planilha. Nunca trava o jogo. */
+function registrar(dados){
+  if(!ENDPOINT || ENDPOINT.indexOf('COLE_AQUI') === 0) return; // ainda não configurado
+  const payload = Object.assign({}, dados, {
+    sessao: SESSAO,
+    idade:  PERFIL.idade,
+    genero: PERFIL.genero,
+    raca:   PERFIL.raca
+  });
+  fetch(ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  }).catch(()=>{});
+}
+
+/* Valida e inicia o jogo após a tela de demografia */
+function submitDemografia(){
+  const idade  = Number(document.getElementById('demoIdade').value);
+  const genero = document.getElementById('demoGenero').value;
+  const raca   = document.getElementById('demoRaca').value;
+
+  if(!idade || !genero || !raca){
+    alert('Por favor, preencha os três campos (ou escolha "Prefiro não dizer").');
+    return;
+  }
+  if(idade < 8 || idade > 100){
+    alert('Informe uma idade entre 8 e 100.');
+    return;
+  }
+
+  PERFIL = { idade, genero, raca };
+  startGame();
+}
+
+/* =========================================================
+   JOGO
+   ========================================================= */
+const questions = [
+  {cat:"🧠 Nise da Silveira", color:"#eadcff", q:"Quem foi Nise da Silveira?", a:["Uma psiquiatra brasileira","Uma cantora de samba","Uma escritora portuguesa","Uma pintora francesa"], c:0, e:"Nise da Silveira foi uma psiquiatra brasileira que defendia formas mais humanas de cuidado em saúde mental e valorizava atividades expressivas."},
+  {cat:"🧠 Nise da Silveira", color:"#eadcff", q:"Que importância a arte teve no trabalho de Nise?", a:["Servia apenas como decoração","Era uma forma de expressão e comunicação","Era usada para substituir todas as outras atividades","Não tinha importância"], c:1, e:"Para Nise, atividades como pintura e modelagem podiam favorecer a expressão de experiências e sentimentos."},
+  {cat:"🧠 Nise da Silveira", color:"#eadcff", q:"Qual atitude de Nise se destacou em sua trajetória?", a:["Defender tratamentos desumanizados","Valorizar o respeito e a expressão dos pacientes","Proibir atividades artísticas","Evitar qualquer contato com a cultura"], c:1, e:"Ela se opôs a práticas que considerava desumanas e valorizou vínculos, criatividade e expressão."},
+  {cat:"🎵 Dona Ivone Lara", color:"#ffd8eb", q:"Dona Ivone Lara foi uma importante personalidade de qual área?", a:["Música brasileira","Astronomia","Arquitetura","Cinema europeu"], c:0, e:"Dona Ivone Lara foi uma grande cantora e compositora brasileira, ligada especialmente ao samba."},
+  {cat:"🎵 Dona Ivone Lara", color:"#ffd8eb", q:"Qual gênero musical está fortemente associado à trajetória de Dona Ivone Lara?", a:["Samba","Rock pesado","Country norte-americano","Música eletrônica"], c:0, e:"O samba ocupa um lugar central em sua trajetória artística."},
+  {cat:"🎵 Dona Ivone Lara", color:"#ffd8eb", q:"Por que Dona Ivone Lara é importante para a cultura brasileira?", a:["Porque ajudou a ampliar a presença feminina na música e deixou uma obra marcante","Porque inventou o rádio","Porque foi atleta olímpica","Porque escreveu livros de matemática"], c:0, e:"Sua trajetória ajudou a destacar uma mulher negra como compositora e intérprete de grande importância na música brasileira."},
+  {cat:"🎨 Arte", color:"#fff0b8", q:"A arte pode ajudar uma pessoa a:", a:["Expressar ideias e sentimentos","Nunca conversar com ninguém","Eliminar todas as emoções","Evitar qualquer forma de criatividade"], c:0, e:"A arte pode ser uma linguagem para comunicar experiências, sentimentos e ideias."},
+  {cat:"🎨 Arte", color:"#fff0b8", q:"O que significa humanizar o cuidado?", a:["Tratar a pessoa com respeito, escuta e dignidade","Ignorar o que a pessoa sente","Olhar apenas para o problema","Evitar diálogo"], c:0, e:"Humanizar significa reconhecer a pessoa em sua integralidade, respeitando sua história, sentimentos e dignidade."},
+  {cat:"🎨 Arte", color:"#fff0b8", q:"Qual ideia aproxima o trabalho de Nise da música de Dona Ivone?", a:["A valorização da expressão e da criatividade","A competição esportiva","A tecnologia espacial","A matemática financeira"], c:0, e:"As duas trajetórias podem ser relacionadas pela força da expressão artística, da criatividade e da cultura."},
+  {cat:"🎨 Arte", color:"#fff0b8", q:"A música pode ser uma forma de:", a:["Expressão cultural e artística","Prova de velocidade","Instrumento de matemática","Objeto sem significado"], c:0, e:"A música comunica emoções, histórias, identidades e experiências culturais."},
+  {cat:"💜 Humanização", color:"#c9f5ee", q:"Qual atitude ajuda a tornar um ambiente mais acolhedor?", a:["Escutar e respeitar o outro","Zombar das diferenças","Interromper sempre","Ignorar sentimentos"], c:0, e:"Escuta, respeito e empatia ajudam a construir ambientes mais acolhedores."},
+  {cat:"💜 Humanização", color:"#c9f5ee", q:"O que arte e música podem ter em comum?", a:["Podem comunicar sentimentos, histórias e ideias","Não podem ser criativas","Só servem para competições","Não fazem parte da cultura"], c:0, e:"Ambas podem funcionar como linguagens artísticas e culturais."}
+];
+
+const challenges = [
+  "🎨 Faça um desenho rápido que represente a palavra EMPATIA.",
+  "🎵 Cite uma música que tenha um significado especial para você e explique em uma frase por quê.",
+  "💜 Em grupo, diga uma atitude que pode tornar a escola mais acolhedora.",
+  "🧠 Em uma frase, explique por que ouvir o outro é importante.",
+  "🎨 Faça uma pequena mímica representando uma emoção para os outros adivinharem.",
+  "🎶 Crie, em 10 segundos, uma frase curta sobre como a música pode unir pessoas."
+];
+
+let position = 0, score = 0;
+let best = Number(localStorage.getItem("trilhaHumanizacaoBest") || 0);
+let waiting = false;
+let currentType = null;
+let currentQuestion = '';   // guarda o texto da pergunta atual
+let currentCategory = '';   // guarda a categoria atual
+
+const cells = [
+  "Início","Nise 🧠","Arte 🎨","Ivone 🎵","Desafio 💜","Arte 🎨",
+  "Nise 🧠","Música 🎵","Arte 🎨","Desafio 💜","Ivone 🎵","Nise 🧠",
+  "Arte 🎨","Música 🎵","Desafio 💜","Nise 🧠","Ivone 🎵","Arte 🎨",
+  "Música 🎵","Desafio 💜","Nise 🧠","Arte 🎨","Ivone 🎵","Música 🎵",
+  "Desafio 💜","Nise 🧠","Arte 🎨","Ivone 🎵","Desafio 💜","Chegada 🏆"
+];
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function startGame(){
+  position=0; score=0; waiting=false;
+  document.getElementById("score").textContent=score;
+  document.getElementById("position").textContent=1;
+  document.getElementById("best").textContent=best;
+  document.getElementById("message").textContent="Jogue o dado e avance pela trilha!";
+  document.getElementById("rollBtn").disabled=false;
+  show("game");
+  buildBoard();
+
+  registrar({ evento:'inicio_jogo' });
+}
+
+function buildBoard(){
+  const board=document.getElementById("board");
+  board.innerHTML="";
+  cells.forEach((name,i)=>{
+    const cell=document.createElement("div");
+    cell.className="cell";
+    if(i===0) cell.classList.add("start");
+    if(i===cells.length-1) cell.classList.add("finish");
+    cell.id="cell-"+i;
+    cell.innerHTML=name;
+    if(i===position){
+      const pawn=document.createElement("span");
+      pawn.className="pawn"; pawn.textContent="🧍";
+      cell.appendChild(pawn);
+      cell.classList.add("highlight");
+    }
+    board.appendChild(cell);
+  });
+}
+
+function rollDice(){
+  if(waiting) return;
+  waiting=true;
+  const btn=document.getElementById("rollBtn");
+  btn.disabled=true;
+  let n=0;
+  const timer=setInterval(()=>{
+    n=Math.floor(Math.random()*6)+1;
+    document.getElementById("dice").textContent=["⚀","⚁","⚂","⚃","⚄","⚅"][n-1];
+  },80);
+  setTimeout(()=>{
+    clearInterval(timer);
+    const final=Math.floor(Math.random()*6)+1;
+    document.getElementById("dice").textContent=["⚀","⚁","⚂","⚃","⚄","⚅"][final-1];
+    move(final);
+  },450);
+}
+
+function move(steps){
+  position=Math.min(position+steps,cells.length-1);
+  document.getElementById("position").textContent=position+1;
+  buildBoard();
+  if(position===cells.length-1){
+    setTimeout(endGame,400);
+    return;
+  }
+  const type=cells[position];
+  document.getElementById("message").textContent=`Você avançou ${steps} casa(s) e caiu em: ${type}.`;
+  setTimeout(()=>openCard(type),450);
+}
+
+function openCard(type){
+  currentType=type;
+  const modal=document.getElementById("modal");
+  const cat=document.getElementById("category");
+  const q=document.getElementById("question");
+  const answers=document.getElementById("answers");
+  const result=document.getElementById("result");
+  const challenge=document.getElementById("challenge");
+  const next=document.getElementById("nextBtn");
+
+  result.classList.add("hidden");
+  next.classList.add("hidden");
+  answers.innerHTML="";
+  challenge.classList.add("hidden");
+
+  if(type.includes("Desafio")){
+    currentQuestion = 'Desafio criativo';
+    currentCategory = '💜 Desafio';
+    cat.textContent="💜 CARTA DESAFIO";
+    cat.style.background="#c9f5ee";
+    q.textContent="Desafio criativo!";
+    document.getElementById("challengeText").textContent =
+      challenges[Math.floor(Math.random()*challenges.length)];
+    challenge.classList.remove("hidden");
+    result.classList.remove("hidden");
+    result.innerHTML="Vale <strong>10 pontos</strong> se você cumprir o desafio!";
+    next.classList.remove("hidden");
+  }else{
+    const pool=questions.filter(x=>type.includes("Nise") ? x.cat.includes("Nise") :
+      type.includes("Ivone") ? x.cat.includes("Ivone") :
+      type.includes("Arte") || type.includes("Música") ? (x.cat.includes("Arte") || x.cat.includes("Humanização")) :
+      true);
+    const item=pool[Math.floor(Math.random()*pool.length)];
+    currentQuestion = item.q;
+    currentCategory = item.cat;
+    cat.textContent=item.cat;
+    cat.style.background=item.color;
+    q.textContent=item.q;
+    item.a.forEach((text,i)=>{
+      const b=document.createElement("button");
+      b.className="answer";
+      b.textContent=String.fromCharCode(65+i)+") "+text;
+      b.onclick=()=>answer(b,i===item.c,item.e);
+      answers.appendChild(b);
+    });
+  }
+  modal.classList.add("show");
+}
+
+function answer(btn, correct, explanation){
+  document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+
+  if(correct){
+    btn.classList.add("correct");
+    score+=10;
+    document.getElementById("score").textContent=score;
+    document.getElementById("result").innerHTML="✅ <strong>Acertou!</strong> +10 pontos.<br>"+explanation;
+    registrar({
+      evento:'resposta',
+      categoria: currentCategory,
+      pergunta: currentQuestion,
+      resposta: btn.textContent,
+      correta: true,
+      pontos: score,
+      posicao: position+1
+    });
+  }else{
+    btn.classList.add("wrong");
+    score=Math.max(0,score-2);
+    document.getElementById("score").textContent=score;
+    document.getElementById("result").innerHTML="❌ <strong>Quase!</strong> Você perdeu 2 pontos.<br>"+explanation;
+    registrar({
+      evento:'resposta',
+      categoria: currentCategory,
+      pergunta: currentQuestion,
+      resposta: btn.textContent,
+      correta: false,
+      pontos: score,
+      posicao: position+1
+    });
+  }
+  document.getElementById("result").classList.remove("hidden");
+  document.getElementById("nextBtn").classList.remove("hidden");
+}
+
+function closeModalAndContinue(){
+  // Se era desafio, concede os 10 pontos ao clicar em Continuar
+  if(currentType && currentType.includes("Desafio")){
+    score += 10;
+    document.getElementById("score").textContent = score;
+    registrar({
+      evento:'desafio_concluido',
+      categoria: currentCategory,
+      pergunta: currentQuestion,
+      resposta: '',
+      correta: true,
+      pontos: score,
+      posicao: position+1
+    });
+  }
+  document.getElementById("modal").classList.remove("show");
+  waiting=false;
+  document.getElementById("rollBtn").disabled=false;
+  document.getElementById("message").textContent="Sua vez! Jogue o dado novamente.";
+}
+
+function endGame(){
+  best=Math.max(best,score);
+  localStorage.setItem("trilhaHumanizacaoBest",best);
+  document.getElementById("finalText").innerHTML=
+    `Você terminou com <strong>${score} pontos</strong>!<br>`+
+    (score>=100 ? "🌟 Excelente! Você mandou muito bem!" :
+     score>=60 ? "👏 Muito bom! Você aprendeu bastante!" :
+     "💜 Parabéns por participar e conhecer essas histórias!");
+
+  registrar({ evento:'fim_jogo', pontos: score, posicao: position+1 });
+
+  show("end");
+}
+
+function restartGame(){
+  // reinicia o perfil para o próximo aluno da feira
+  PERFIL = { idade:'', genero:'', raca:'' };
+  document.getElementById('demoIdade').value = '';
+  document.getElementById('demoGenero').value = '';
+  document.getElementById('demoRaca').value = '';
+  show('start');
+}
+
+document.getElementById("best").textContent=best;
+</script>
+</body>
+</html>
